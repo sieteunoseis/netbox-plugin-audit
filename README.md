@@ -2,7 +2,7 @@
 
 Audit tool for validating NetBox plugin structure, metadata, and best practices.
 
-Given a git URL (or local path), it clones the repo, runs ~80 checks across 10 categories, and outputs a color-coded report.
+Given a git URL (or local path), it clones the repo, runs ~95 checks across 10 categories, and outputs a color-coded report.
 
 ## Features
 
@@ -15,6 +15,7 @@ Given a git URL (or local path), it clones the repo, runs ~80 checks across 10 c
 - **GitHub Workflows** — CI lint (black/isort/flake8) and release (PyPI publish)
 - **Code linting** — Runs black, isort, flake8 against the plugin code
 - **Package build** — Builds the package and validates with twine
+- **Certification readiness** — Checks against the [NetBox Plugin Certification Program](https://github.com/netbox-community/netbox/wiki/Plugin-Certification-Program) requirements
 
 ## Requirements
 
@@ -47,24 +48,26 @@ pip install -e ".[all]"
 
 ## Usage
 
-```bash
-# Audit a remote plugin
-netbox-plugin-audit https://github.com/sieteunoseis/netbox-oxidized
+Docker is the preferred way to run the tool — it includes all dependencies (git, black, isort, flake8, build, twine) out of the box.
 
-# Audit a local plugin
-netbox-plugin-audit /path/to/netbox-plugin
+```bash
+# Audit a remote plugin (Docker)
+docker run --rm ghcr.io/sieteunoseis/netbox-plugin-audit https://github.com/sieteunoseis/netbox-oxidized
 
 # JSON output (for CI)
-netbox-plugin-audit --format json https://github.com/user/plugin
+docker run --rm ghcr.io/sieteunoseis/netbox-plugin-audit --format json https://github.com/user/plugin
 
 # Markdown output
-netbox-plugin-audit --format markdown https://github.com/user/plugin
+docker run --rm ghcr.io/sieteunoseis/netbox-plugin-audit --format markdown https://github.com/user/plugin
 
 # Strict mode (exit 1 on any warning)
-netbox-plugin-audit --strict https://github.com/user/plugin
+docker run --rm ghcr.io/sieteunoseis/netbox-plugin-audit --strict https://github.com/user/plugin
 
 # Skip slow checks
-netbox-plugin-audit --skip-lint --skip-build https://github.com/user/plugin
+docker run --rm ghcr.io/sieteunoseis/netbox-plugin-audit --skip-lint --skip-build https://github.com/user/plugin
+
+# Audit a local plugin (pip install)
+netbox-plugin-audit /path/to/netbox-plugin
 ```
 
 ## Output
@@ -72,7 +75,7 @@ netbox-plugin-audit --skip-lint --skip-build https://github.com/user/plugin
 ```
 ══════════════════════════════════════════════════════
   NetBox Plugin Audit Report
-  Plugin: netbox_oxidized (v0.2.0)
+  Plugin: netbox_cisco_support (v1.0.9)
 ══════════════════════════════════════════════════════
 
   📁 Structure                                    9/9
@@ -81,14 +84,21 @@ netbox-plugin-audit --skip-lint --skip-build https://github.com/user/plugin
     PASS  CHANGELOG.md exists
     ...
 
-  ⚙️  PluginConfig                                12/12
-    PASS  PluginConfig subclass: OxidizedConfig
-    PASS  config = OxidizedConfig
+  ⚙️  PluginConfig                               17/17
+    PASS  PluginConfig subclass: CiscoSupportConfig
+    PASS  config = CiscoSupportConfig
+    ...
+
+  🏅 Certification                               11/14
+    PASS  License file found: LICENSE
+    PASS  License appears OSI-approved and Apache 2.0 compatible
+    PASS  Version compatibility info found in README
+    WARN  No test directory found (required for certification)
     ...
 
   ──────────────────────────────────────────────────
-  Summary: 72/80 checks passed (90%)
-    Errors: 0 | Warnings: 3 | Info: 5
+  Summary: 90/95 checks passed (95%)
+    Errors: 0 | Warnings: 4 | Info: 1
 ```
 
 ## License
