@@ -1,0 +1,155 @@
+
+══════════════════════════════════════════════════════════
+  NetBox Plugin Audit Report
+  Plugin: netbox_catalyst_center (v1.5.0)
+══════════════════════════════════════════════════════════
+
+  📁 Structure                                   10/14
+    PASS  pyproject.toml exists
+    PASS  README.md exists
+    PASS  CHANGELOG.md exists
+    PASS  LICENSE exists
+    PASS  .gitignore exists
+    INFO  CONTRIBUTING.md not found (recommended)
+    INFO  COMPATIBILITY.md not found (recommended for version tracking)
+    INFO  .editorconfig not found (recommended for consistent formatting)
+    INFO  .pre-commit-config.yaml not found (recommended)
+    PASS  docs/ directory exists
+    PASS  .github/workflows/ exists
+    PASS  Plugin package found: netbox_catalyst_center
+    PASS  __init__.py exists
+    PASS  templates/ directory exists
+
+  ⚙️  PluginConfig                              17/17
+    PASS  PluginConfig subclass: CatalystCenterConfig
+    PASS  config = CatalystCenterConfig
+    PASS  name = "netbox_catalyst_center"
+    PASS  verbose_name = "NetBox Catalyst Center"
+    PASS  description = "Display Cisco Catalyst Center client details in device pages"
+    PASS  version set (references __version__)
+    PASS  author = "Jeremy Worden"
+    PASS  author_email = "jeremy.worden@gmail.com"
+    PASS  base_url = "catalyst-center"
+    PASS  min_version = "4.0.0"
+    PASS  max_version = "5.99"
+    PASS  default_settings defined
+    PASS  name matches package directory
+    PASS  Valid email: jeremy.worden@gmail.com
+    PASS  URL-safe base_url: catalyst-center
+    PASS  min_version 4.0.0 >= 4.0.0
+    PASS  __version__ = "1.5.0"
+
+  📦 pyproject.toml                              29/29
+    PASS  setuptools build system configured
+    PASS  project.name set
+    PASS  project.version set
+    PASS  project.description set
+    PASS  project.readme set
+    PASS  project.requires-python set
+    PASS  project.authors set
+    PASS  project.license set
+    PASS  project.classifiers set
+    PASS  project.keywords set
+    PASS  project.dependencies set
+    PASS  License is Apache-2.0
+    PASS  requires-python: >=3.10
+    PASS  Framework :: Django classifier present
+    PASS  Python 3 classifiers present
+    PASS  Homepage URL set
+    PASS  Repository URL set
+    PASS  Issues URL set
+    PASS  Documentation URL set
+    PASS  Changelog URL set
+    PASS  Dev dependencies: black, flake8, isort, pytest
+    PASS  black in dev dependencies
+    PASS  flake8 in dev dependencies
+    PASS  isort in dev dependencies
+    PASS  setuptools packages.find configured
+    PASS  package-data configured for templates
+    PASS  [tool.black] configured (line-length=120)
+    PASS  [tool.isort] profile = "black"
+    PASS  isort/black line-length match (120)
+
+  🔢 Versioning                                  2/3
+    PASS  __version__ is valid semver: 1.5.0
+    PASS  pyproject.toml version matches (1.5.0)
+    WARN  CHANGELOG latest (1.3.5) != __version__ (1.5.0)
+
+  📋 CHANGELOG                                   6/6
+    PASS  Starts with # Changelog
+    PASS  [Unreleased] section found
+    PASS  9 version entries found
+    PASS  All dates are valid YYYY-MM-DD
+    PASS  Subsections used: Added, Changed, Fixed
+    PASS  References Keep a Changelog format
+
+  📖 README                                      7/7
+    PASS  README length: 9297 chars
+    PASS  Features section found
+    PASS  Install section found
+    PASS  Configuration section found
+    PASS  Requirements section found
+    PASS  Badge(s) found
+    PASS  Screenshots/images found
+
+  🧩 Django Structure                            4/5
+    PASS  urls.py exists
+    PASS  views.py exists
+    INFO  models.py not found (OK if no custom models)
+    PASS  navigation.py exists
+    PASS  forms.py exists
+
+  🔧 Workflows                                   9/10
+    PASS  CI workflow found: ci.yml
+    PASS  black in CI workflow
+    PASS  isort in CI workflow
+    PASS  flake8 in CI workflow
+    PASS  Tests Python 3.10, 3.11, 3.12
+    PASS  Package build check in CI
+    PASS  Release workflow found: release.yml
+    WARN  Release may not trigger on tag push
+    PASS  PyPI publish configured
+    PASS  GitHub Release creation configured
+
+  🔒 Security                                    5/6
+    PASS  No hardcoded secrets detected
+    PASS  No non-configurable verify=False found
+    WARN  requests call missing timeout: netbox_catalyst_center/catalyst_client.py:66
+    PASS  Views use permission checks
+    PASS  No .env or credential files in repo
+    PASS  .env in .gitignore
+
+  🏅 Certification                               10/14
+    PASS  License file found: LICENSE
+    PASS  License appears OSI-approved and Apache 2.0 compatible
+    PASS  Version compatibility info found in README
+    PASS  Dependencies documented in README
+    PASS  Screenshots/recordings found in README
+    PASS  Installation instructions found
+    PASS  Support/contact info found in README
+    PASS  Plugin icon found
+    WARN  No test directory found (required for certification)
+    WARN  No CI workflow running tests (required for certification)
+    INFO  No breaking changes noted (OK if none exist)
+    INFO  No CONTRIBUTING guide (recommended for certification)
+    PASS  License declared in pyproject.toml
+    PASS  Project URLs configured (5 URLs)
+
+  🔍 Linting                                     3/3
+    PASS  black formatting check passed
+    PASS  isort import check passed
+    PASS  flake8 lint check passed
+
+  🏗️  Packaging                                 7/7
+    PASS  Build succeeded: netbox_catalyst_center-1.5.0-py3-none-any.whl, netbox_catalyst_center-1.5.0.tar.gz
+    PASS  Wheel (.whl) built
+    PASS  Source dist (.tar.gz) built
+    PASS  twine check passed
+    PASS  netbox-catalyst-center found on PyPI (latest: 1.5.0)
+    PASS  Local version matches PyPI (1.5.0)
+    PASS  PyPI project URLs: Homepage, Issues, Repository
+
+  ──────────────────────────────────────────────────────────
+  Summary: 109/121 checks passed (90%)
+    Errors: 0 | Warnings: 5 | Info: 7
+
