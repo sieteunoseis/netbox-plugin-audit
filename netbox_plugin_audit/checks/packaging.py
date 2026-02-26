@@ -1,8 +1,11 @@
 """Check package build and validation."""
 
+import json
 import os
 import subprocess
 import tempfile
+import urllib.error
+import urllib.request
 
 from . import CategoryResult, CheckResult, Severity
 
@@ -69,4 +72,77 @@ def check_packaging(plugin_path: str) -> CategoryResult:
         except subprocess.TimeoutExpired:
             results.append(CheckResult("build", Severity.WARNING, "Build timed out (120s)"))
 
+    # --- PyPI presence check ---
+    _check_pypi(plugin_path, results)
+
     return cat
+
+
+def _check_pypi(plugin_path: str, results: list) -> None:
+    """Check if the package exists on PyPI and compare versions."""
+    try:
+        import tomllib
+    except ImportError:
+        try:
+            import tomli as tomllib  # type: ignore[no-redef]
+        except ImportError:
+            return
+
+    pyproject_path = os.path.join(plugin_path, "pyproject.toml")
+    if not os.path.isfile(pyproject_path):
+        return
+
+    try:
+        with open(pyproject_path, "rb") as f:
+            data = tomllib.load(f)
+    except Exception:
+        return
+
+    pkg_name = data.get("project", {}).get("name", "")
+    if not pkg_name:
+        return
+
+    local_version = data.get("project", {}).get("version", "")
+
+    try:
+        url = f"https://pypi.org/pypi/{pkg_name}/json"
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            pypi_data = json.loads(resp.read().decode())
+
+        pypi_version = pypi_data.get("info", {}).get("version", "")
+        results.append(CheckResult("pypi_exists", Severity.PASS, f"{pkg_name} found on PyPI (latest: {pypi_version})"))
+
+        # Compare versions
+        if local_version and pypi_version:
+            if local_version == pypi_version:
+                results.append(
+                    CheckResult("pypi_version", Severity.PASS, f"Local version matches PyPI ({local_version})")
+                )
+            else:
+                results.append(
+                    CheckResult(
+                        "pypi_version",
+                        Severity.INFO,
+                        f"Local version ({local_version}) differs from PyPI ({pypi_version})",
+                    )
+                )
+
+        # Check for project URLs on PyPI
+        project_urls = pypi_data.get("info", {}).get("project_urls") or {}
+        if project_urls:
+            results.append(
+                CheckResult("pypi_project_urls", Severity.PASS, f"PyPI project URLs: {', '.join(project_urls.keys())}")
+            )
+        else:
+            results.append(CheckResult("pypi_project_urls", Severity.WARNING, "No project URLs on PyPI listing"))
+
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            results.append(
+                CheckResult("pypi_exists", Severity.INFO, f"{pkg_name} not found on PyPI (not yet published?)")
+            )
+        else:
+            results.append(CheckResult("pypi_exists", Severity.INFO, f"Could not check PyPI: HTTP {e.code}"))
+    except Exception as e:
+        results.append(CheckResult("pypi_exists", Severity.INFO, f"Could not check PyPI: {e}"))
