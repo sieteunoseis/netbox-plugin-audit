@@ -102,14 +102,21 @@ def check_pyproject(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     # Dev dependencies
     opt_deps = project.get("optional-dependencies", data.get("project", {}).get("optional-dependencies", {}))
     dev_deps = opt_deps.get("dev", [])
+    has_ruff_dep = any("ruff" in d for d in dev_deps) if dev_deps else False
+
     if dev_deps:
         dev_str = ", ".join(dev_deps)
         results.append(CheckResult("dev_deps", Severity.PASS, f"Dev dependencies: {dev_str}"))
-        for tool in ["black", "flake8", "isort"]:
-            if any(tool in d for d in dev_deps):
-                results.append(CheckResult(f"dev_{tool}", Severity.PASS, f"{tool} in dev dependencies"))
-            else:
-                results.append(CheckResult(f"dev_{tool}", Severity.WARNING, f"{tool} missing from dev dependencies"))
+        if has_ruff_dep:
+            results.append(CheckResult("dev_ruff", Severity.PASS, "ruff in dev dependencies (modern alternative)"))
+        else:
+            for tool_name in ["black", "flake8", "isort"]:
+                if any(tool_name in d for d in dev_deps):
+                    results.append(CheckResult(f"dev_{tool_name}", Severity.PASS, f"{tool_name} in dev dependencies"))
+                else:
+                    results.append(
+                        CheckResult(f"dev_{tool_name}", Severity.WARNING, f"{tool_name} missing from dev dependencies")
+                    )
     else:
         results.append(CheckResult("dev_deps", Severity.WARNING, "No [project.optional-dependencies] dev section"))
 
@@ -129,41 +136,63 @@ def check_pyproject(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     else:
         results.append(CheckResult("package_data", Severity.WARNING, "package-data not configured"))
 
-    # Black config
-    black_cfg = tool.get("black", {})
-    if black_cfg:
-        line_len = black_cfg.get("line-length")
-        results.append(CheckResult("black_config", Severity.PASS, f"[tool.black] configured (line-length={line_len})"))
+    # Ruff config (modern alternative to black+isort+flake8)
+    ruff_cfg = tool.get("ruff", {})
+    if ruff_cfg:
+        ruff_line_len = ruff_cfg.get("line-length")
+        results.append(
+            CheckResult("ruff_config", Severity.PASS, f"[tool.ruff] configured (line-length={ruff_line_len})")
+        )
+        # Check ruff lint settings
+        ruff_lint = ruff_cfg.get("lint", {})
+        if ruff_lint:
+            ruff_select = ruff_lint.get("select", [])
+            results.append(
+                CheckResult("ruff_lint", Severity.PASS, f"[tool.ruff.lint] configured ({len(ruff_select)} rule sets)")
+            )
+        # Check ruff isort section
+        ruff_isort = ruff_cfg.get("lint", {}).get("isort", ruff_cfg.get("isort", {}))
+        if ruff_isort:
+            results.append(CheckResult("ruff_isort", Severity.PASS, "[tool.ruff.lint.isort] configured"))
     else:
-        results.append(CheckResult("black_config", Severity.WARNING, "[tool.black] section missing"))
-
-    # Isort config
-    isort_cfg = tool.get("isort", {})
-    if isort_cfg:
-        profile = isort_cfg.get("profile", "")
-        if profile == "black":
-            results.append(CheckResult("isort_config", Severity.PASS, '[tool.isort] profile = "black"'))
+        # Fall back to checking black + isort individually
+        black_cfg = tool.get("black", {})
+        if black_cfg:
+            line_len = black_cfg.get("line-length")
+            results.append(
+                CheckResult("black_config", Severity.PASS, f"[tool.black] configured (line-length={line_len})")
+            )
         else:
-            results.append(
-                CheckResult("isort_config", Severity.WARNING, f'[tool.isort] profile = "{profile}" (expected "black")')
-            )
+            results.append(CheckResult("black_config", Severity.WARNING, "[tool.black] section missing"))
 
-        # Check line length consistency
-        isort_len = isort_cfg.get("line_length")
-        black_len = black_cfg.get("line-length")
-        if isort_len and black_len and isort_len == black_len:
-            results.append(
-                CheckResult("line_length_match", Severity.PASS, f"isort/black line-length match ({black_len})")
-            )
-        elif isort_len and black_len:
-            results.append(
-                CheckResult(
-                    "line_length_match",
-                    Severity.WARNING,
-                    f"isort ({isort_len}) != black ({black_len}) line-length",
+        isort_cfg = tool.get("isort", {})
+        if isort_cfg:
+            profile = isort_cfg.get("profile", "")
+            if profile == "black":
+                results.append(CheckResult("isort_config", Severity.PASS, '[tool.isort] profile = "black"'))
+            else:
+                results.append(
+                    CheckResult(
+                        "isort_config", Severity.WARNING, f'[tool.isort] profile = "{profile}" (expected "black")'
+                    )
                 )
-            )
-    else:
-        results.append(CheckResult("isort_config", Severity.WARNING, "[tool.isort] section missing"))
+
+            # Check line length consistency
+            isort_len = isort_cfg.get("line_length")
+            black_len = black_cfg.get("line-length")
+            if isort_len and black_len and isort_len == black_len:
+                results.append(
+                    CheckResult("line_length_match", Severity.PASS, f"isort/black line-length match ({black_len})")
+                )
+            elif isort_len and black_len:
+                results.append(
+                    CheckResult(
+                        "line_length_match",
+                        Severity.WARNING,
+                        f"isort ({isort_len}) != black ({black_len}) line-length",
+                    )
+                )
+        else:
+            results.append(CheckResult("isort_config", Severity.WARNING, "[tool.isort] section missing"))
 
     return cat

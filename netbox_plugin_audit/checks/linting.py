@@ -18,8 +18,17 @@ def _run_tool(cmd: list[str], cwd: str) -> tuple[int, str]:
         return -2, f"{cmd[0]} timed out"
 
 
+def _check_ruff_available() -> bool:
+    """Check if ruff is available."""
+    try:
+        result = subprocess.run(["ruff", "--version"], capture_output=True, text=True, timeout=10)
+        return result.returncode == 0
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+
+
 def check_linting(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
-    """Run black, isort, and flake8 checks."""
+    """Run linting checks (ruff or black+isort+flake8)."""
     cat = CategoryResult(name="Linting", icon="Q")
     results = cat.results
 
@@ -32,6 +41,28 @@ def check_linting(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
         results.append(CheckResult("package", Severity.ERROR, f"Package directory not found: {pkg_dir}"))
         return cat
 
+    # Try ruff first (modern alternative)
+    if _check_ruff_available():
+        # Ruff check (linting)
+        rc, output = _run_tool(["ruff", "check", pkg_dir + "/"], plugin_path)
+        if rc == 0:
+            results.append(CheckResult("ruff_check", Severity.PASS, "ruff check passed"))
+        else:
+            error_lines = [line for line in output.split("\n") if line.strip()]
+            count = len(error_lines)
+            results.append(CheckResult("ruff_check", Severity.WARNING, f"ruff found {count} issue(s)"))
+
+        # Ruff format check
+        rc, output = _run_tool(["ruff", "format", "--check", pkg_dir + "/"], plugin_path)
+        if rc == 0:
+            results.append(CheckResult("ruff_format", Severity.PASS, "ruff format check passed"))
+        else:
+            reformat_count = output.count("would reformat")
+            results.append(
+                CheckResult("ruff_format", Severity.WARNING, f"ruff would reformat {reformat_count} file(s)")
+            )
+
+    # Always run black+isort+flake8 (they are the standard for our plugins)
     # Black
     rc, output = _run_tool(["python", "-m", "black", "--check", pkg_dir + "/"], plugin_path)
     if rc == 0:
@@ -39,7 +70,6 @@ def check_linting(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     elif rc == -1:
         results.append(CheckResult("black", Severity.INFO, "black not installed (skipped)"))
     else:
-        # Count files that would be reformatted
         reformat_count = output.count("would reformat")
         results.append(CheckResult("black", Severity.WARNING, f"black would reformat {reformat_count} file(s)"))
 

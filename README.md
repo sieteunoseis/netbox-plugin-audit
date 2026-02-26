@@ -2,18 +2,20 @@
 
 Audit tool for validating NetBox plugin structure, metadata, and best practices.
 
-Given a git URL (or local path), it clones the repo, runs ~95 checks across 10 categories, and outputs a color-coded report.
+Given a git URL (or local path), it clones the repo, runs ~115 checks across 12 categories, and outputs a color-coded report.
 
 ## Features
 
-- **Structure checks** — Required files (pyproject.toml, README, CHANGELOG, LICENSE, .gitignore, workflows)
+- **Structure checks** — Required files (pyproject.toml, README, CHANGELOG, LICENSE, .gitignore, workflows, .editorconfig, CONTRIBUTING.md, docs/)
 - **PluginConfig validation** — AST parsing of `__init__.py` for all required attributes
-- **pyproject.toml validation** — Build system, metadata, URLs, dev deps, tool config
+- **pyproject.toml validation** — Build system, metadata, URLs, dev deps, tool config (ruff or black/isort/flake8)
 - **Version sync** — Checks `__init__.py`, `pyproject.toml`, and `CHANGELOG.md` match
 - **CHANGELOG format** — Keep a Changelog compliance
 - **README content** — Features, install, configuration sections and badges
-- **GitHub Workflows** — CI lint (black/isort/flake8) and release (PyPI publish)
-- **Code linting** — Runs black, isort, flake8 against the plugin code
+- **Django app structure** — urls.py, views.py, models.py, migrations/, navigation.py, tables.py, filtersets.py, forms.py, api/ directory
+- **Security patterns** — Hardcoded secrets, verify=False, request timeouts, permission mixins, .env files
+- **GitHub Workflows** — CI lint (ruff or black/isort/flake8) and release (PyPI publish)
+- **Code linting** — Runs black, isort, flake8 (and ruff if available) against the plugin code
 - **Package build** — Builds the package and validates with twine
 - **Certification readiness** — Checks against the [NetBox Plugin Certification Program](https://github.com/netbox-community/netbox/wiki/Plugin-Certification-Program) requirements
 
@@ -96,9 +98,21 @@ netbox-plugin-audit /path/to/netbox-plugin
     WARN  No test directory found (required for certification)
     ...
 
+  🧩 Django Structure                             10/12
+    PASS  urls.py exists
+    PASS  views.py exists
+    PASS  models.py exists
+    ...
+
+  🔒 Security                                      6/6
+    PASS  No hardcoded secrets detected
+    PASS  No non-configurable verify=False found
+    PASS  All requests calls include timeout
+    ...
+
   ──────────────────────────────────────────────────
-  Summary: 90/95 checks passed (95%)
-    Errors: 0 | Warnings: 4 | Info: 1
+  Summary: 101/111 checks passed (91%)
+    Errors: 0 | Warnings: 4 | Info: 6
 ```
 
 ## License

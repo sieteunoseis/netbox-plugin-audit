@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-26
+
+### Added
+- Django app structure checks (urls.py, views.py, models.py, migrations/, navigation.py, tables.py, filtersets.py, forms.py, template_content.py, graphql.py, api/ directory)
+- Security pattern checks (hardcoded secrets, verify=False, request timeouts, permission mixins, .env files, .gitignore coverage)
+- Plugin Certification Program readiness checks (OSI license, tests, docs, compatibility matrix, screenshots, CONTRIBUTING guide, PyPI metadata)
+- Ruff detection as alternative to black+isort+flake8 in pyproject.toml, workflows, and linting checks
+- Additional structure checks (CONTRIBUTING.md, COMPATIBILITY.md, .editorconfig, .pre-commit-config.yaml, docs/ directory)
+
 ## [0.1.0] - 2026-02-26
 
 ### Added

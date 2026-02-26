@@ -23,6 +23,30 @@ def check_structure(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
         else:
             results.append(CheckResult(fname, sev, f"{fname} not found"))
 
+    # Recommended files
+    for fname, sev, msg in [
+        ("CONTRIBUTING.md", Severity.INFO, "CONTRIBUTING.md not found (recommended)"),
+        ("COMPATIBILITY.md", Severity.INFO, "COMPATIBILITY.md not found (recommended for version tracking)"),
+        (".editorconfig", Severity.INFO, ".editorconfig not found (recommended for consistent formatting)"),
+        (".pre-commit-config.yaml", Severity.INFO, ".pre-commit-config.yaml not found (recommended)"),
+    ]:
+        if os.path.isfile(os.path.join(plugin_path, fname)):
+            results.append(CheckResult(fname, Severity.PASS, f"{fname} exists"))
+        else:
+            results.append(CheckResult(fname, sev, msg))
+
+    # Docs directory
+    docs_dir = os.path.join(plugin_path, "docs")
+    if os.path.isdir(docs_dir):
+        results.append(CheckResult("docs_dir", Severity.PASS, "docs/ directory exists"))
+        mkdocs_path = os.path.join(plugin_path, "mkdocs.yml")
+        if os.path.isfile(mkdocs_path):
+            results.append(CheckResult("mkdocs", Severity.PASS, "mkdocs.yml exists"))
+    else:
+        results.append(
+            CheckResult("docs_dir", Severity.INFO, "docs/ directory not found (recommended for extended docs)")
+        )
+
     # Workflows directory
     wf_dir = os.path.join(plugin_path, ".github", "workflows")
     if os.path.isdir(wf_dir):

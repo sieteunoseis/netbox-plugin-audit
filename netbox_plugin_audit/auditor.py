@@ -8,11 +8,13 @@ import tempfile
 from .checks import CategoryResult
 from .checks.certification import check_certification
 from .checks.changelog import check_changelog
+from .checks.django_app import check_django_app
 from .checks.linting import check_linting
 from .checks.packaging import check_packaging
 from .checks.pluginconfig import check_pluginconfig
 from .checks.pyproject import check_pyproject
 from .checks.readme import check_readme
+from .checks.security import check_security
 from .checks.structure import check_structure
 from .checks.versioning import check_versioning
 from .checks.workflows import check_workflows
@@ -105,7 +107,9 @@ def audit_plugin(source: str, skip_lint: bool = False, skip_build: bool = False)
         categories.append(check_versioning(plugin_path, pkg_dir))
         categories.append(check_changelog(plugin_path))
         categories.append(check_readme(plugin_path))
+        categories.append(check_django_app(plugin_path, pkg_dir))
         categories.append(check_workflows(plugin_path, pkg_dir))
+        categories.append(check_security(plugin_path, pkg_dir))
         categories.append(check_certification(plugin_path, pkg_dir))
 
         if not skip_lint:

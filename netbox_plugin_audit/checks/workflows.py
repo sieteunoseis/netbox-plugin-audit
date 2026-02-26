@@ -34,14 +34,17 @@ def check_workflows(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
         ci_content = _read_yaml_simple(ci_path)
         results.append(CheckResult("ci_exists", Severity.PASS, f"CI workflow found: {os.path.basename(ci_path)}"))
 
-        # Check for lint tools
-        for tool_name in ["black", "isort", "flake8"]:
-            if tool_name in ci_content:
-                results.append(CheckResult(f"ci_{tool_name}", Severity.PASS, f"{tool_name} in CI workflow"))
-            else:
-                results.append(
-                    CheckResult(f"ci_{tool_name}", Severity.WARNING, f"{tool_name} not found in CI workflow")
-                )
+        # Check for lint tools (ruff or black+isort+flake8)
+        if "ruff" in ci_content:
+            results.append(CheckResult("ci_ruff", Severity.PASS, "ruff in CI workflow (modern linter)"))
+        else:
+            for tool_name in ["black", "isort", "flake8"]:
+                if tool_name in ci_content:
+                    results.append(CheckResult(f"ci_{tool_name}", Severity.PASS, f"{tool_name} in CI workflow"))
+                else:
+                    results.append(
+                        CheckResult(f"ci_{tool_name}", Severity.WARNING, f"{tool_name} not found in CI workflow")
+                    )
 
         # Check Python version matrix
         py_versions = re.findall(r"['\"]?(3\.1[0-9])['\"]?", ci_content)
