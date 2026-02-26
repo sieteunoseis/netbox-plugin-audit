@@ -1,19 +1,122 @@
-"""Check CHANGELOG.md format and content."""
+"""Check changelog format and content."""
 
+import json
 import os
 import re
+import subprocess
+import urllib.error
+import urllib.request
 
 from . import CategoryResult, CheckResult, Severity
 
+# Common changelog file variants
+CHANGELOG_VARIANTS = [
+    "CHANGELOG.md",
+    "CHANGELOG.rst",
+    "CHANGELOG.txt",
+    "CHANGELOG",
+    "CHANGES.md",
+    "CHANGES.rst",
+    "CHANGES.txt",
+    "HISTORY.md",
+    "HISTORY.rst",
+]
+
+
+def _find_changelog(plugin_path: str) -> str | None:
+    """Find changelog file, trying common variants."""
+    for variant in CHANGELOG_VARIANTS:
+        path = os.path.join(plugin_path, variant)
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def _get_github_repo(plugin_path: str) -> str | None:
+    """Extract GitHub owner/repo from git remote URL."""
+    try:
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            cwd=plugin_path,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            return None
+        url = result.stdout.strip()
+        m = re.search(r"github\.com[/:]([^/]+/[^/.]+?)(?:\.git)?$", url)
+        return m.group(1) if m else None
+    except Exception:
+        return None
+
+
+def _check_github_releases(plugin_path: str, results: list) -> bool:
+    """Check if the repo has GitHub releases. Returns True if releases found."""
+    repo = _get_github_repo(plugin_path)
+    if not repo:
+        return False
+
+    try:
+        url = f"https://api.github.com/repos/{repo}/releases?per_page=5"
+        req = urllib.request.Request(url, headers={"Accept": "application/vnd.github.v3+json"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            releases = json.loads(resp.read().decode())
+
+        if not releases:
+            return False
+
+        count = len(releases)
+        latest = releases[0].get("tag_name", "unknown")
+        has_body = any(r.get("body", "").strip() for r in releases)
+
+        results.append(
+            CheckResult(
+                "github_releases",
+                Severity.PASS,
+                f"GitHub Releases found ({count}+ releases, latest: {latest})",
+            )
+        )
+
+        if has_body:
+            results.append(CheckResult("release_notes", Severity.PASS, "GitHub Releases include release notes"))
+        else:
+            results.append(CheckResult("release_notes", Severity.INFO, "GitHub Releases have no release notes body"))
+
+        results.append(
+            CheckResult(
+                "changelog_suggestion",
+                Severity.INFO,
+                "Consider adding a CHANGELOG.md for offline/PyPI visibility",
+            )
+        )
+        return True
+
+    except urllib.error.HTTPError:
+        return False
+    except Exception:
+        return False
+
 
 def check_changelog(plugin_path: str) -> CategoryResult:
-    """Validate CHANGELOG.md follows Keep a Changelog format."""
+    """Validate changelog format and content."""
     cat = CategoryResult(name="CHANGELOG", icon="L")
     results = cat.results
 
-    cl_path = os.path.join(plugin_path, "CHANGELOG.md")
-    if not os.path.isfile(cl_path):
-        results.append(CheckResult("exists", Severity.WARNING, "CHANGELOG.md not found"))
+    cl_path = _find_changelog(plugin_path)
+    if not cl_path:
+        # No changelog file — check GitHub Releases as alternative
+        if _check_github_releases(plugin_path, results):
+            return cat
+        results.append(CheckResult("exists", Severity.WARNING, "No changelog file found"))
+        return cat
+
+    fname = os.path.basename(cl_path)
+    results.append(CheckResult("exists", Severity.PASS, f"{fname} exists"))
+
+    # Only do detailed format checks on markdown changelogs
+    if not cl_path.endswith(".md"):
+        results.append(CheckResult("format", Severity.INFO, f"{fname} found (detailed checks only for .md)"))
         return cat
 
     with open(cl_path) as f:

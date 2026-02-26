@@ -42,6 +42,22 @@ def _find_pluginconfig_class(tree):
     return None
 
 
+def _is_importlib_metadata_version(node):
+    """Check if AST node is importlib.metadata.version(...) call."""
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    # importlib.metadata.version("pkg")
+    if isinstance(func, ast.Attribute) and func.attr == "version":
+        if isinstance(func.value, ast.Attribute) and func.value.attr == "metadata":
+            return True
+    # metadata.version("pkg") after `from importlib import metadata`
+    if isinstance(func, ast.Attribute) and func.attr == "version":
+        if isinstance(func.value, ast.Name) and func.value.id == "metadata":
+            return True
+    return False
+
+
 def _get_class_attributes(class_node):
     """Extract class-level attribute assignments."""
     attrs = {}
@@ -56,6 +72,8 @@ def _get_class_attributes(class_node):
                         attrs[target.id] = f"__ref__{node.value.id}"
                     elif isinstance(node.value, (ast.Dict, ast.List)):
                         attrs[target.id] = "__present__"
+                    elif _is_importlib_metadata_version(node.value):
+                        attrs[target.id] = "__dynamic_version__"
     return attrs
 
 
@@ -119,9 +137,23 @@ def check_pluginconfig(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     attrs = _get_class_attributes(config_class)
     top_assignments = _extract_assignments(tree)
 
-    # Required attributes
-    required = ["name", "verbose_name", "description", "version", "author", "author_email", "base_url", "min_version"]
+    # Required attributes (ERROR if missing)
+    required = ["name", "verbose_name", "description", "version", "base_url", "min_version"]
     for attr in required:
+        if attr in attrs:
+            val = attrs[attr]
+            if val == "__dynamic_version__":
+                results.append(CheckResult(attr, Severity.PASS, f"{attr} set (via importlib.metadata)"))
+            elif val.startswith("__ref__"):
+                results.append(CheckResult(attr, Severity.PASS, f"{attr} set (references {val[7:]})"))
+            else:
+                display = val[:60] + "..." if len(val) > 60 else val
+                results.append(CheckResult(attr, Severity.PASS, f'{attr} = "{display}"'))
+        else:
+            results.append(CheckResult(attr, Severity.ERROR, f"{attr} not set"))
+
+    # Recommended attributes (WARNING if missing — may be in pyproject.toml instead)
+    for attr in ["author", "author_email"]:
         if attr in attrs:
             val = attrs[attr]
             if val.startswith("__ref__"):
@@ -130,7 +162,7 @@ def check_pluginconfig(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
                 display = val[:60] + "..." if len(val) > 60 else val
                 results.append(CheckResult(attr, Severity.PASS, f'{attr} = "{display}"'))
         else:
-            results.append(CheckResult(attr, Severity.ERROR, f"{attr} not set"))
+            results.append(CheckResult(attr, Severity.WARNING, f"{attr} not set in PluginConfig"))
 
     # Recommended attributes
     if "max_version" in attrs:
@@ -186,9 +218,20 @@ def check_pluginconfig(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
         except (ValueError, IndexError):
             pass
 
-    # Check __version__ exists at module level
+    # Check __version__ or importlib.metadata at module level
+    has_version_import = False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == "version":
+            for alias in node.names:
+                if alias.name == "__version__":
+                    has_version_import = True
+
     if "__version__" in top_assignments:
         results.append(CheckResult("__version__", Severity.PASS, f'__version__ = "{top_assignments["__version__"]}"'))
+    elif has_version_import:
+        results.append(CheckResult("__version__", Severity.PASS, "__version__ imported from .version module"))
+    elif "version" in attrs and attrs["version"] == "__dynamic_version__":
+        results.append(CheckResult("__version__", Severity.PASS, "Version via importlib.metadata (modern pattern)"))
     else:
         results.append(CheckResult("__version__", Severity.WARNING, "__version__ not found at module level"))
 

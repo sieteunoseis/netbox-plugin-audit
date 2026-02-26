@@ -9,6 +9,7 @@ from .checks import CategoryResult
 from .checks.certification import check_certification
 from .checks.changelog import check_changelog
 from .checks.django_app import check_django_app
+from .checks.github import check_github
 from .checks.linting import check_linting
 from .checks.packaging import check_packaging
 from .checks.pluginconfig import check_pluginconfig
@@ -30,7 +31,7 @@ def _detect_plugin_package(plugin_path: str) -> str | None:
 
 
 def _get_plugin_version(plugin_path: str, pkg_dir: str) -> str | None:
-    """Extract version from __init__.py."""
+    """Extract version from __init__.py, version.py, or pyproject.toml."""
     import ast
 
     init_path = os.path.join(plugin_path, pkg_dir, "__init__.py")
@@ -38,16 +39,72 @@ def _get_plugin_version(plugin_path: str, pkg_dir: str) -> str | None:
         return None
     try:
         with open(init_path) as f:
-            tree = ast.parse(f.read())
+            source = f.read()
+        tree = ast.parse(source)
         for node in ast.walk(tree):
             if isinstance(node, ast.Assign):
                 for target in node.targets:
                     if isinstance(target, ast.Name) and target.id == "__version__":
                         if isinstance(node.value, ast.Constant):
                             return str(node.value.value)
+
+        # Check for `from .version import __version__` pattern
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module == "version":
+                for alias in node.names:
+                    if alias.name == "__version__":
+                        ver = _get_version_from_file(plugin_path, pkg_dir, "version.py")
+                        if ver:
+                            return ver
+
+        # Fallback: if importlib.metadata is used, get version from pyproject.toml
+        if "importlib.metadata" in source or "importlib import metadata" in source:
+            return _get_pyproject_version(plugin_path)
     except Exception:
         pass
     return None
+
+
+def _get_version_from_file(plugin_path: str, pkg_dir: str, filename: str) -> str | None:
+    """Extract __version__ from a specific file (e.g. version.py)."""
+    import ast
+
+    ver_path = os.path.join(plugin_path, pkg_dir, filename)
+    if not os.path.isfile(ver_path):
+        return None
+    try:
+        with open(ver_path) as f:
+            source = f.read()
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == "__version__":
+                        if isinstance(node.value, ast.Constant):
+                            return str(node.value.value)
+        return None
+    except Exception:
+        return None
+
+
+def _get_pyproject_version(plugin_path: str) -> str | None:
+    """Extract version from pyproject.toml."""
+    try:
+        import tomllib
+    except ImportError:
+        try:
+            import tomli as tomllib  # type: ignore[no-redef]
+        except ImportError:
+            return None
+    toml_path = os.path.join(plugin_path, "pyproject.toml")
+    if not os.path.isfile(toml_path):
+        return None
+    try:
+        with open(toml_path, "rb") as f:
+            data = tomllib.load(f)
+        return data.get("project", {}).get("version")
+    except Exception:
+        return None
 
 
 def _clone_repo(url: str, dest: str) -> bool:
@@ -111,6 +168,7 @@ def audit_plugin(source: str, skip_lint: bool = False, skip_build: bool = False)
         categories.append(check_workflows(plugin_path, pkg_dir))
         categories.append(check_security(plugin_path, pkg_dir))
         categories.append(check_certification(plugin_path, pkg_dir))
+        categories.append(check_github(plugin_path, pkg_dir))
 
         if not skip_lint:
             categories.append(check_linting(plugin_path, pkg_dir))

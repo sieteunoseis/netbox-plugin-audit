@@ -10,18 +10,50 @@ def check_structure(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     cat = CategoryResult(name="Structure", icon="F")
     results = cat.results
 
-    # Required files
+    # Required files (exact match)
     for fname, sev in [
         ("pyproject.toml", Severity.ERROR),
         ("README.md", Severity.ERROR),
-        ("CHANGELOG.md", Severity.WARNING),
-        ("LICENSE", Severity.WARNING),
         (".gitignore", Severity.WARNING),
     ]:
         if os.path.isfile(os.path.join(plugin_path, fname)):
             results.append(CheckResult(fname, Severity.PASS, f"{fname} exists"))
         else:
             results.append(CheckResult(fname, sev, f"{fname} not found"))
+
+    # LICENSE - check common variants
+    license_variants = ["LICENSE", "LICENSE.txt", "LICENSE.md", "LICENCE", "LICENCE.txt", "LICENCE.md"]
+    found_license = None
+    for variant in license_variants:
+        if os.path.isfile(os.path.join(plugin_path, variant)):
+            found_license = variant
+            break
+    if found_license:
+        results.append(CheckResult("LICENSE", Severity.PASS, f"{found_license} exists"))
+    else:
+        results.append(CheckResult("LICENSE", Severity.WARNING, "No LICENSE file found"))
+
+    # CHANGELOG - check common variants
+    changelog_variants = [
+        "CHANGELOG.md",
+        "CHANGELOG.rst",
+        "CHANGELOG.txt",
+        "CHANGELOG",
+        "CHANGES.md",
+        "CHANGES.rst",
+        "CHANGES.txt",
+        "HISTORY.md",
+        "HISTORY.rst",
+    ]
+    found_changelog = None
+    for variant in changelog_variants:
+        if os.path.isfile(os.path.join(plugin_path, variant)):
+            found_changelog = variant
+            break
+    if found_changelog:
+        results.append(CheckResult("CHANGELOG", Severity.PASS, f"{found_changelog} exists"))
+    else:
+        results.append(CheckResult("CHANGELOG", Severity.WARNING, "No CHANGELOG file found"))
 
     # Recommended files
     for fname, sev, msg in [

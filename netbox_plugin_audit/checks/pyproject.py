@@ -17,7 +17,15 @@ def check_pyproject(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
 
     toml_path = os.path.join(plugin_path, "pyproject.toml")
     if not os.path.isfile(toml_path):
-        results.append(CheckResult("exists", Severity.ERROR, "pyproject.toml not found"))
+        setup_path = os.path.join(plugin_path, "setup.py")
+        if os.path.isfile(setup_path):
+            results.append(
+                CheckResult(
+                    "exists", Severity.WARNING, "pyproject.toml not found (setup.py exists — consider migrating)"
+                )
+            )
+        else:
+            results.append(CheckResult("exists", Severity.ERROR, "pyproject.toml not found"))
         return cat
 
     try:
@@ -90,12 +98,24 @@ def check_pyproject(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     else:
         results.append(CheckResult("classifier_python", Severity.WARNING, "Missing Python 3 classifiers"))
 
-    # Project URLs
+    # Project URLs (accept common aliases)
     urls = project.get("urls", data.get("project", {}).get("urls", {}))
-    expected_urls = ["Homepage", "Repository", "Issues", "Documentation", "Changelog"]
-    for url_name in expected_urls:
-        if url_name in urls:
-            results.append(CheckResult(f"url_{url_name.lower()}", Severity.PASS, f"{url_name} URL set"))
+    url_checks = {
+        "Homepage": ["Homepage", "Home", "Home-page"],
+        "Repository": ["Repository", "Source", "Source Code", "Code", "GitHub"],
+        "Issues": ["Issues", "Bug Tracker", "Tracker", "Bug Reports"],
+        "Documentation": ["Documentation", "Docs", "Documentation URL"],
+        "Changelog": ["Changelog", "Changes", "Release Notes", "History", "What's New"],
+    }
+    for url_name, aliases in url_checks.items():
+        found = None
+        for alias in aliases:
+            if alias in urls:
+                found = alias
+                break
+        if found:
+            label = f"{url_name} URL set" if found == url_name else f"{url_name} URL set (as '{found}')"
+            results.append(CheckResult(f"url_{url_name.lower()}", Severity.PASS, label))
         else:
             results.append(CheckResult(f"url_{url_name.lower()}", Severity.WARNING, f"{url_name} URL missing"))
 

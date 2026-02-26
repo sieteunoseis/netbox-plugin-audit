@@ -170,13 +170,25 @@ def check_certification(plugin_path: str, pkg_dir: str | None) -> CategoryResult
     # --- CI/CD running tests ---
     wf_dir = os.path.join(plugin_path, ".github", "workflows")
     ci_runs_tests = False
+    test_patterns = [
+        "pytest",
+        "python -m test",
+        "manage.py test",
+        "test.sh",
+        "./test.sh",
+        "tox",
+        "nox",
+        "unittest",
+        "nose",
+        "coverage run",
+    ]
     if os.path.isdir(wf_dir):
         for wf_file in os.listdir(wf_dir):
             wf_path = os.path.join(wf_dir, wf_file)
             if os.path.isfile(wf_path) and wf_file.endswith((".yml", ".yaml")):
                 with open(wf_path) as f:
                     wf_content = f.read().lower()
-                if "pytest" in wf_content or "python -m test" in wf_content or "manage.py test" in wf_content:
+                if any(pat in wf_content for pat in test_patterns):
                     ci_runs_tests = True
                     break
 
@@ -188,8 +200,25 @@ def check_certification(plugin_path: str, pkg_dir: str | None) -> CategoryResult
         )
 
     # --- Release notes / CHANGELOG ---
-    changelog_path = os.path.join(plugin_path, "CHANGELOG.md")
-    if os.path.isfile(changelog_path):
+    changelog_variants = [
+        "CHANGELOG.md",
+        "CHANGELOG.rst",
+        "CHANGELOG.txt",
+        "CHANGELOG",
+        "CHANGES.md",
+        "CHANGES.rst",
+        "CHANGES.txt",
+        "HISTORY.md",
+        "HISTORY.rst",
+    ]
+    changelog_path = None
+    for variant in changelog_variants:
+        p = os.path.join(plugin_path, variant)
+        if os.path.isfile(p):
+            changelog_path = p
+            break
+
+    if changelog_path:
         with open(changelog_path) as f:
             cl_content = f.read()
 

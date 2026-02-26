@@ -5,11 +5,43 @@ import re
 
 from . import CategoryResult, CheckResult, Severity
 
+# Keywords that suggest a CI/lint workflow
+CI_KEYWORDS = ["ci", "lint", "test", "check", "qa", "validate"]
+# Keywords that suggest a release/publish workflow
+RELEASE_KEYWORDS = ["release", "publish", "deploy", "pypi", "pub"]
+
 
 def _read_yaml_simple(path: str) -> str:
     """Read YAML file as text (no yaml parser needed for simple checks)."""
     with open(path) as f:
         return f.read()
+
+
+def _find_workflow(wf_dir: str, keywords: list[str]) -> str | None:
+    """Find a workflow file matching any of the given keywords."""
+    for wf_file in sorted(os.listdir(wf_dir)):
+        if not wf_file.endswith((".yml", ".yaml")):
+            continue
+        name_lower = wf_file.lower()
+        for kw in keywords:
+            if kw in name_lower:
+                return os.path.join(wf_dir, wf_file)
+    return None
+
+
+def _find_workflow_by_content(wf_dir: str, content_patterns: list[str]) -> str | None:
+    """Find a workflow file whose content matches any of the given patterns."""
+    for wf_file in sorted(os.listdir(wf_dir)):
+        if not wf_file.endswith((".yml", ".yaml")):
+            continue
+        path = os.path.join(wf_dir, wf_file)
+        try:
+            content = _read_yaml_simple(path).lower()
+            if any(pat in content for pat in content_patterns):
+                return path
+        except Exception:
+            continue
+    return None
 
 
 def check_workflows(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
@@ -22,21 +54,24 @@ def check_workflows(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
         results.append(CheckResult("workflows_dir", Severity.WARNING, ".github/workflows/ not found"))
         return cat
 
-    # CI workflow
-    ci_path = None
-    for name in ["ci.yml", "ci.yaml", "lint.yml", "lint.yaml", "test.yml", "test.yaml"]:
-        candidate = os.path.join(wf_dir, name)
-        if os.path.isfile(candidate):
-            ci_path = candidate
-            break
+    # CI workflow — find by filename first, then by content
+    ci_path = _find_workflow(wf_dir, CI_KEYWORDS)
+    if not ci_path:
+        ci_path = _find_workflow_by_content(
+            wf_dir, ["super-linter", "super_linter", "ruff", "flake8", "black", "isort", "pre-commit", "pylint"]
+        )
 
     if ci_path:
         ci_content = _read_yaml_simple(ci_path)
         results.append(CheckResult("ci_exists", Severity.PASS, f"CI workflow found: {os.path.basename(ci_path)}"))
 
-        # Check for lint tools (ruff or black+isort+flake8)
+        # Check for lint tools (ruff, super-linter, or black+isort+flake8)
         if "ruff" in ci_content:
             results.append(CheckResult("ci_ruff", Severity.PASS, "ruff in CI workflow (modern linter)"))
+        elif "super-linter" in ci_content or "super_linter" in ci_content:
+            results.append(CheckResult("ci_superlinter", Severity.PASS, "super-linter in CI workflow (multi-linter)"))
+        elif "pre-commit" in ci_content:
+            results.append(CheckResult("ci_precommit", Severity.PASS, "pre-commit in CI workflow"))
         else:
             for tool_name in ["black", "isort", "flake8"]:
                 if tool_name in ci_content:
@@ -68,15 +103,12 @@ def check_workflows(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
         else:
             results.append(CheckResult("ci_package", Severity.INFO, "No package build check in CI"))
     else:
-        results.append(CheckResult("ci_exists", Severity.WARNING, "No CI workflow found (ci.yml, lint.yml, test.yml)"))
+        results.append(CheckResult("ci_exists", Severity.WARNING, "No CI/lint workflow found"))
 
-    # Release workflow
-    rel_path = None
-    for name in ["release.yml", "release.yaml", "publish.yml", "publish.yaml"]:
-        candidate = os.path.join(wf_dir, name)
-        if os.path.isfile(candidate):
-            rel_path = candidate
-            break
+    # Release workflow — find by filename first, then by content
+    rel_path = _find_workflow(wf_dir, RELEASE_KEYWORDS)
+    if not rel_path:
+        rel_path = _find_workflow_by_content(wf_dir, ["pypi", "gh-action-pypi-publish", "twine upload"])
 
     if rel_path:
         rel_content = _read_yaml_simple(rel_path)

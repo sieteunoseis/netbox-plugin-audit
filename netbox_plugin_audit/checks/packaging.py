@@ -15,9 +15,13 @@ def check_packaging(plugin_path: str) -> CategoryResult:
     cat = CategoryResult(name="Packaging", icon="B")
     results = cat.results
 
-    if not os.path.isfile(os.path.join(plugin_path, "pyproject.toml")):
-        results.append(CheckResult("pyproject", Severity.ERROR, "pyproject.toml not found, cannot build"))
+    has_pyproject = os.path.isfile(os.path.join(plugin_path, "pyproject.toml"))
+    has_setup = os.path.isfile(os.path.join(plugin_path, "setup.py"))
+    if not has_pyproject and not has_setup:
+        results.append(CheckResult("pyproject", Severity.ERROR, "No pyproject.toml or setup.py found, cannot build"))
         return cat
+    if not has_pyproject:
+        results.append(CheckResult("pyproject", Severity.INFO, "Using setup.py (consider migrating to pyproject.toml)"))
 
     # Build in a temp directory
     with tempfile.TemporaryDirectory() as tmpdir:
