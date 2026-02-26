@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netbox-plugin-audit"
+version = "0.1.0"
+description = "Audit tool for validating NetBox plugin structure, metadata, and best practices"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "sieteunoseis", email = "jeremy.worden@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+keywords = ["netbox", "plugin", "audit", "lint", "validation"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "isort",
+]
+lint = [
+    "black",
+    "flake8",
+    "isort",
+]
+build = [
+    "build",
+    "twine",
+]
+all = [
+    "black",
+    "flake8",
+    "isort",
+    "build",
+    "twine",
+]
+
+[project.urls]
+Homepage = "https://github.com/sieteunoseis/netbox-plugin-audit"
+Repository = "https://github.com/sieteunoseis/netbox-plugin-audit"
+Issues = "https://github.com/sieteunoseis/netbox-plugin-audit/issues"
+
+[project.scripts]
+netbox-plugin-audit = "netbox_plugin_audit.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["netbox_plugin_audit*"]
+
+[tool.black]
+line-length = 120
+target-version = ['py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 120
