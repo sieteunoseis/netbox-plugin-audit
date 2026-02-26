@@ -1,0 +1,702 @@
+{
+  "plugin_name": "netbox_catalyst_center",
+  "version": "1.5.0",
+  "summary": {
+    "total": 121,
+    "passed": 109,
+    "errors": 0,
+    "warnings": 5,
+    "infos": 7
+  },
+  "categories": [
+    {
+      "name": "Structure",
+      "passed": 10,
+      "total": 14,
+      "checks": [
+        {
+          "name": "pyproject.toml",
+          "severity": "pass",
+          "message": "pyproject.toml exists"
+        },
+        {
+          "name": "README.md",
+          "severity": "pass",
+          "message": "README.md exists"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "severity": "pass",
+          "message": "CHANGELOG.md exists"
+        },
+        {
+          "name": "LICENSE",
+          "severity": "pass",
+          "message": "LICENSE exists"
+        },
+        {
+          "name": ".gitignore",
+          "severity": "pass",
+          "message": ".gitignore exists"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "severity": "info",
+          "message": "CONTRIBUTING.md not found (recommended)"
+        },
+        {
+          "name": "COMPATIBILITY.md",
+          "severity": "info",
+          "message": "COMPATIBILITY.md not found (recommended for version tracking)"
+        },
+        {
+          "name": ".editorconfig",
+          "severity": "info",
+          "message": ".editorconfig not found (recommended for consistent formatting)"
+        },
+        {
+          "name": ".pre-commit-config.yaml",
+          "severity": "info",
+          "message": ".pre-commit-config.yaml not found (recommended)"
+        },
+        {
+          "name": "docs_dir",
+          "severity": "pass",
+          "message": "docs/ directory exists"
+        },
+        {
+          "name": "workflows",
+          "severity": "pass",
+          "message": ".github/workflows/ exists"
+        },
+        {
+          "name": "package_dir",
+          "severity": "pass",
+          "message": "Plugin package found: netbox_catalyst_center"
+        },
+        {
+          "name": "init_py",
+          "severity": "pass",
+          "message": "__init__.py exists"
+        },
+        {
+          "name": "templates",
+          "severity": "pass",
+          "message": "templates/ directory exists"
+        }
+      ]
+    },
+    {
+      "name": "PluginConfig",
+      "passed": 17,
+      "total": 17,
+      "checks": [
+        {
+          "name": "pluginconfig_class",
+          "severity": "pass",
+          "message": "PluginConfig subclass: CatalystCenterConfig"
+        },
+        {
+          "name": "config_assignment",
+          "severity": "pass",
+          "message": "config = CatalystCenterConfig"
+        },
+        {
+          "name": "name",
+          "severity": "pass",
+          "message": "name = \"netbox_catalyst_center\""
+        },
+        {
+          "name": "verbose_name",
+          "severity": "pass",
+          "message": "verbose_name = \"NetBox Catalyst Center\""
+        },
+        {
+          "name": "description",
+          "severity": "pass",
+          "message": "description = \"Display Cisco Catalyst Center client details in device pages\""
+        },
+        {
+          "name": "version",
+          "severity": "pass",
+          "message": "version set (references __version__)"
+        },
+        {
+          "name": "author",
+          "severity": "pass",
+          "message": "author = \"Jeremy Worden\""
+        },
+        {
+          "name": "author_email",
+          "severity": "pass",
+          "message": "author_email = \"jeremy.worden@gmail.com\""
+        },
+        {
+          "name": "base_url",
+          "severity": "pass",
+          "message": "base_url = \"catalyst-center\""
+        },
+        {
+          "name": "min_version",
+          "severity": "pass",
+          "message": "min_version = \"4.0.0\""
+        },
+        {
+          "name": "max_version",
+          "severity": "pass",
+          "message": "max_version = \"5.99\""
+        },
+        {
+          "name": "default_settings",
+          "severity": "pass",
+          "message": "default_settings defined"
+        },
+        {
+          "name": "name_match",
+          "severity": "pass",
+          "message": "name matches package directory"
+        },
+        {
+          "name": "email_format",
+          "severity": "pass",
+          "message": "Valid email: jeremy.worden@gmail.com"
+        },
+        {
+          "name": "base_url_format",
+          "severity": "pass",
+          "message": "URL-safe base_url: catalyst-center"
+        },
+        {
+          "name": "min_version_value",
+          "severity": "pass",
+          "message": "min_version 4.0.0 >= 4.0.0"
+        },
+        {
+          "name": "__version__",
+          "severity": "pass",
+          "message": "__version__ = \"1.5.0\""
+        }
+      ]
+    },
+    {
+      "name": "pyproject.toml",
+      "passed": 29,
+      "total": 29,
+      "checks": [
+        {
+          "name": "build_system",
+          "severity": "pass",
+          "message": "setuptools build system configured"
+        },
+        {
+          "name": "project_name",
+          "severity": "pass",
+          "message": "project.name set"
+        },
+        {
+          "name": "project_version",
+          "severity": "pass",
+          "message": "project.version set"
+        },
+        {
+          "name": "project_description",
+          "severity": "pass",
+          "message": "project.description set"
+        },
+        {
+          "name": "project_readme",
+          "severity": "pass",
+          "message": "project.readme set"
+        },
+        {
+          "name": "project_requires-python",
+          "severity": "pass",
+          "message": "project.requires-python set"
+        },
+        {
+          "name": "project_authors",
+          "severity": "pass",
+          "message": "project.authors set"
+        },
+        {
+          "name": "project_license",
+          "severity": "pass",
+          "message": "project.license set"
+        },
+        {
+          "name": "project_classifiers",
+          "severity": "pass",
+          "message": "project.classifiers set"
+        },
+        {
+          "name": "project_keywords",
+          "severity": "pass",
+          "message": "project.keywords set"
+        },
+        {
+          "name": "project_dependencies",
+          "severity": "pass",
+          "message": "project.dependencies set"
+        },
+        {
+          "name": "license_type",
+          "severity": "pass",
+          "message": "License is Apache-2.0"
+        },
+        {
+          "name": "python_version",
+          "severity": "pass",
+          "message": "requires-python: >=3.10"
+        },
+        {
+          "name": "classifier_django",
+          "severity": "pass",
+          "message": "Framework :: Django classifier present"
+        },
+        {
+          "name": "classifier_python",
+          "severity": "pass",
+          "message": "Python 3 classifiers present"
+        },
+        {
+          "name": "url_homepage",
+          "severity": "pass",
+          "message": "Homepage URL set"
+        },
+        {
+          "name": "url_repository",
+          "severity": "pass",
+          "message": "Repository URL set"
+        },
+        {
+          "name": "url_issues",
+          "severity": "pass",
+          "message": "Issues URL set"
+        },
+        {
+          "name": "url_documentation",
+          "severity": "pass",
+          "message": "Documentation URL set"
+        },
+        {
+          "name": "url_changelog",
+          "severity": "pass",
+          "message": "Changelog URL set"
+        },
+        {
+          "name": "dev_deps",
+          "severity": "pass",
+          "message": "Dev dependencies: black, flake8, isort, pytest"
+        },
+        {
+          "name": "dev_black",
+          "severity": "pass",
+          "message": "black in dev dependencies"
+        },
+        {
+          "name": "dev_flake8",
+          "severity": "pass",
+          "message": "flake8 in dev dependencies"
+        },
+        {
+          "name": "dev_isort",
+          "severity": "pass",
+          "message": "isort in dev dependencies"
+        },
+        {
+          "name": "setuptools_find",
+          "severity": "pass",
+          "message": "setuptools packages.find configured"
+        },
+        {
+          "name": "package_data",
+          "severity": "pass",
+          "message": "package-data configured for templates"
+        },
+        {
+          "name": "black_config",
+          "severity": "pass",
+          "message": "[tool.black] configured (line-length=120)"
+        },
+        {
+          "name": "isort_config",
+          "severity": "pass",
+          "message": "[tool.isort] profile = \"black\""
+        },
+        {
+          "name": "line_length_match",
+          "severity": "pass",
+          "message": "isort/black line-length match (120)"
+        }
+      ]
+    },
+    {
+      "name": "Versioning",
+      "passed": 2,
+      "total": 3,
+      "checks": [
+        {
+          "name": "semver",
+          "severity": "pass",
+          "message": "__version__ is valid semver: 1.5.0"
+        },
+        {
+          "name": "pyproject_match",
+          "severity": "pass",
+          "message": "pyproject.toml version matches (1.5.0)"
+        },
+        {
+          "name": "changelog_match",
+          "severity": "warning",
+          "message": "CHANGELOG latest (1.3.5) != __version__ (1.5.0)"
+        }
+      ]
+    },
+    {
+      "name": "CHANGELOG",
+      "passed": 6,
+      "total": 6,
+      "checks": [
+        {
+          "name": "header",
+          "severity": "pass",
+          "message": "Starts with # Changelog"
+        },
+        {
+          "name": "unreleased",
+          "severity": "pass",
+          "message": "[Unreleased] section found"
+        },
+        {
+          "name": "versions",
+          "severity": "pass",
+          "message": "9 version entries found"
+        },
+        {
+          "name": "dates",
+          "severity": "pass",
+          "message": "All dates are valid YYYY-MM-DD"
+        },
+        {
+          "name": "subsections",
+          "severity": "pass",
+          "message": "Subsections used: Added, Changed, Fixed"
+        },
+        {
+          "name": "format_ref",
+          "severity": "pass",
+          "message": "References Keep a Changelog format"
+        }
+      ]
+    },
+    {
+      "name": "README",
+      "passed": 7,
+      "total": 7,
+      "checks": [
+        {
+          "name": "length",
+          "severity": "pass",
+          "message": "README length: 9297 chars"
+        },
+        {
+          "name": "features",
+          "severity": "pass",
+          "message": "Features section found"
+        },
+        {
+          "name": "install",
+          "severity": "pass",
+          "message": "Install section found"
+        },
+        {
+          "name": "configuration",
+          "severity": "pass",
+          "message": "Configuration section found"
+        },
+        {
+          "name": "requirements",
+          "severity": "pass",
+          "message": "Requirements section found"
+        },
+        {
+          "name": "badges",
+          "severity": "pass",
+          "message": "Badge(s) found"
+        },
+        {
+          "name": "screenshots",
+          "severity": "pass",
+          "message": "Screenshots/images found"
+        }
+      ]
+    },
+    {
+      "name": "Django Structure",
+      "passed": 4,
+      "total": 5,
+      "checks": [
+        {
+          "name": "urls_py",
+          "severity": "pass",
+          "message": "urls.py exists"
+        },
+        {
+          "name": "views_py",
+          "severity": "pass",
+          "message": "views.py exists"
+        },
+        {
+          "name": "models_py",
+          "severity": "info",
+          "message": "models.py not found (OK if no custom models)"
+        },
+        {
+          "name": "navigation_py",
+          "severity": "pass",
+          "message": "navigation.py exists"
+        },
+        {
+          "name": "forms_py",
+          "severity": "pass",
+          "message": "forms.py exists"
+        }
+      ]
+    },
+    {
+      "name": "Workflows",
+      "passed": 9,
+      "total": 10,
+      "checks": [
+        {
+          "name": "ci_exists",
+          "severity": "pass",
+          "message": "CI workflow found: ci.yml"
+        },
+        {
+          "name": "ci_black",
+          "severity": "pass",
+          "message": "black in CI workflow"
+        },
+        {
+          "name": "ci_isort",
+          "severity": "pass",
+          "message": "isort in CI workflow"
+        },
+        {
+          "name": "ci_flake8",
+          "severity": "pass",
+          "message": "flake8 in CI workflow"
+        },
+        {
+          "name": "ci_python_matrix",
+          "severity": "pass",
+          "message": "Tests Python 3.10, 3.11, 3.12"
+        },
+        {
+          "name": "ci_package",
+          "severity": "pass",
+          "message": "Package build check in CI"
+        },
+        {
+          "name": "release_exists",
+          "severity": "pass",
+          "message": "Release workflow found: release.yml"
+        },
+        {
+          "name": "release_trigger",
+          "severity": "warning",
+          "message": "Release may not trigger on tag push"
+        },
+        {
+          "name": "release_pypi",
+          "severity": "pass",
+          "message": "PyPI publish configured"
+        },
+        {
+          "name": "release_github",
+          "severity": "pass",
+          "message": "GitHub Release creation configured"
+        }
+      ]
+    },
+    {
+      "name": "Security",
+      "passed": 5,
+      "total": 6,
+      "checks": [
+        {
+          "name": "no_secrets",
+          "severity": "pass",
+          "message": "No hardcoded secrets detected"
+        },
+        {
+          "name": "ssl_verify",
+          "severity": "pass",
+          "message": "No non-configurable verify=False found"
+        },
+        {
+          "name": "request_timeout",
+          "severity": "warning",
+          "message": "requests call missing timeout: netbox_catalyst_center/catalyst_client.py:66"
+        },
+        {
+          "name": "view_permissions",
+          "severity": "pass",
+          "message": "Views use permission checks"
+        },
+        {
+          "name": "no_env_files",
+          "severity": "pass",
+          "message": "No .env or credential files in repo"
+        },
+        {
+          "name": "gitignore_env",
+          "severity": "pass",
+          "message": ".env in .gitignore"
+        }
+      ]
+    },
+    {
+      "name": "Certification",
+      "passed": 10,
+      "total": 14,
+      "checks": [
+        {
+          "name": "license_file",
+          "severity": "pass",
+          "message": "License file found: LICENSE"
+        },
+        {
+          "name": "license_osi",
+          "severity": "pass",
+          "message": "License appears OSI-approved and Apache 2.0 compatible"
+        },
+        {
+          "name": "compat_matrix",
+          "severity": "pass",
+          "message": "Version compatibility info found in README"
+        },
+        {
+          "name": "deps_documented",
+          "severity": "pass",
+          "message": "Dependencies documented in README"
+        },
+        {
+          "name": "screenshots",
+          "severity": "pass",
+          "message": "Screenshots/recordings found in README"
+        },
+        {
+          "name": "install_docs",
+          "severity": "pass",
+          "message": "Installation instructions found"
+        },
+        {
+          "name": "support_info",
+          "severity": "pass",
+          "message": "Support/contact info found in README"
+        },
+        {
+          "name": "icon",
+          "severity": "pass",
+          "message": "Plugin icon found"
+        },
+        {
+          "name": "tests_exist",
+          "severity": "warning",
+          "message": "No test directory found (required for certification)"
+        },
+        {
+          "name": "ci_tests",
+          "severity": "warning",
+          "message": "No CI workflow running tests (required for certification)"
+        },
+        {
+          "name": "breaking_changes",
+          "severity": "info",
+          "message": "No breaking changes noted (OK if none exist)"
+        },
+        {
+          "name": "contributing",
+          "severity": "info",
+          "message": "No CONTRIBUTING guide (recommended for certification)"
+        },
+        {
+          "name": "pypi_license",
+          "severity": "pass",
+          "message": "License declared in pyproject.toml"
+        },
+        {
+          "name": "pypi_urls",
+          "severity": "pass",
+          "message": "Project URLs configured (5 URLs)"
+        }
+      ]
+    },
+    {
+      "name": "Linting",
+      "passed": 3,
+      "total": 3,
+      "checks": [
+        {
+          "name": "black",
+          "severity": "pass",
+          "message": "black formatting check passed"
+        },
+        {
+          "name": "isort",
+          "severity": "pass",
+          "message": "isort import check passed"
+        },
+        {
+          "name": "flake8",
+          "severity": "pass",
+          "message": "flake8 lint check passed"
+        }
+      ]
+    },
+    {
+      "name": "Packaging",
+      "passed": 7,
+      "total": 7,
+      "checks": [
+        {
+          "name": "build",
+          "severity": "pass",
+          "message": "Build succeeded: netbox_catalyst_center-1.5.0-py3-none-any.whl, netbox_catalyst_center-1.5.0.tar.gz"
+        },
+        {
+          "name": "wheel",
+          "severity": "pass",
+          "message": "Wheel (.whl) built"
+        },
+        {
+          "name": "sdist",
+          "severity": "pass",
+          "message": "Source dist (.tar.gz) built"
+        },
+        {
+          "name": "twine",
+          "severity": "pass",
+          "message": "twine check passed"
+        },
+        {
+          "name": "pypi_exists",
+          "severity": "pass",
+          "message": "netbox-catalyst-center found on PyPI (latest: 1.5.0)"
+        },
+        {
+          "name": "pypi_version",
+          "severity": "pass",
+          "message": "Local version matches PyPI (1.5.0)"
+        },
+        {
+          "name": "pypi_project_urls",
+          "severity": "pass",
+          "message": "PyPI project URLs: Homepage, Issues, Repository"
+        }
+      ]
+    }
+  ]
+}
