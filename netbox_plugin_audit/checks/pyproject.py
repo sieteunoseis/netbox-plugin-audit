@@ -124,11 +124,18 @@ def check_pyproject(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     tool = data.get("tool", {})
 
     # Setuptools
-    pkg_find = tool.get("setuptools", {}).get("packages", {}).get("find", {})
-    if pkg_find:
-        results.append(CheckResult("setuptools_find", Severity.PASS, "setuptools packages.find configured"))
+    setuptools_cfg = tool.get("setuptools", {})
+    packages_val = setuptools_cfg.get("packages", {})
+    if isinstance(packages_val, dict):
+        pkg_find = packages_val.get("find", {})
+        if pkg_find:
+            results.append(CheckResult("setuptools_find", Severity.PASS, "setuptools packages.find configured"))
+        else:
+            results.append(CheckResult("setuptools_find", Severity.WARNING, "setuptools packages.find not configured"))
+    elif isinstance(packages_val, list) and packages_val:
+        results.append(CheckResult("setuptools_find", Severity.PASS, f"setuptools packages configured: {packages_val}"))
     else:
-        results.append(CheckResult("setuptools_find", Severity.WARNING, "setuptools packages.find not configured"))
+        results.append(CheckResult("setuptools_find", Severity.WARNING, "setuptools packages not configured"))
 
     pkg_data = tool.get("setuptools", {}).get("package-data", {})
     if pkg_data:
