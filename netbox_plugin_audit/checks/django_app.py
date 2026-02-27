@@ -39,6 +39,43 @@ def _has_django_views(filepath: str) -> bool:
         return False
 
 
+def _get_widget_info(filepath: str) -> dict:
+    """Check widgets.py for DashboardWidget subclasses and @register_widget decorators.
+
+    Returns dict with keys: classes (list of names), has_register_decorator (bool).
+    """
+    result = {"classes": [], "has_register_decorator": False}
+    try:
+        with open(filepath) as f:
+            tree = ast.parse(f.read())
+        for node in ast.iter_child_nodes(tree):
+            if isinstance(node, ast.ClassDef):
+                # Check if it inherits from DashboardWidget (or *Widget)
+                is_widget = False
+                for base in node.bases:
+                    name = None
+                    if isinstance(base, ast.Name):
+                        name = base.id
+                    elif isinstance(base, ast.Attribute):
+                        name = base.attr
+                    if name and "Widget" in name:
+                        is_widget = True
+                if is_widget:
+                    result["classes"].append(node.name)
+                    # Check for @register_widget decorator
+                    for deco in node.decorator_list:
+                        deco_name = None
+                        if isinstance(deco, ast.Name):
+                            deco_name = deco.id
+                        elif isinstance(deco, ast.Attribute):
+                            deco_name = deco.attr
+                        if deco_name == "register_widget":
+                            result["has_register_decorator"] = True
+        return result
+    except Exception:
+        return result
+
+
 def check_django_app(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     """Validate Django app structure follows NetBox plugin conventions."""
     cat = CategoryResult(name="Django Structure", icon="D")
@@ -167,6 +204,40 @@ def check_django_app(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     gql_path = os.path.join(pkg_path, "graphql.py")
     if os.path.isfile(gql_path):
         results.append(CheckResult("graphql_py", Severity.PASS, "graphql.py exists"))
+
+    # --- Dashboard widgets ---
+    widgets_path = os.path.join(pkg_path, "widgets.py")
+    if os.path.isfile(widgets_path):
+        widget_info = _get_widget_info(widgets_path)
+        if widget_info["classes"]:
+            names = ", ".join(widget_info["classes"])
+            results.append(
+                CheckResult(
+                    "widgets_py",
+                    Severity.PASS,
+                    f"widgets.py defines {len(widget_info['classes'])} widget(s): {names}",
+                )
+            )
+            if widget_info["has_register_decorator"]:
+                results.append(
+                    CheckResult("widget_registration", Severity.PASS, "@register_widget decorator found")
+                )
+            else:
+                results.append(
+                    CheckResult(
+                        "widget_registration",
+                        Severity.WARNING,
+                        "Widget classes found but no @register_widget decorator (widgets won't appear in dashboard)",
+                    )
+                )
+        else:
+            results.append(
+                CheckResult("widgets_py", Severity.INFO, "widgets.py exists but no DashboardWidget subclasses found")
+            )
+    else:
+        results.append(
+            CheckResult("widgets_py", Severity.INFO, "No dashboard widgets (widgets.py not found)")
+        )
 
     # --- API structure ---
     api_dir = os.path.join(pkg_path, "api")

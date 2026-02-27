@@ -218,6 +218,61 @@ def check_pluginconfig(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
         except (ValueError, IndexError):
             pass
 
+    # Check ready() method for widget import (only if widgets.py exists with widget classes)
+    widgets_path = os.path.join(plugin_path, pkg_dir, "widgets.py")
+    if os.path.isfile(widgets_path):
+        # Quick check: does widgets.py contain DashboardWidget subclasses?
+        has_widget_classes = False
+        try:
+            with open(widgets_path) as f:
+                widgets_tree = ast.parse(f.read())
+            for wnode in ast.iter_child_nodes(widgets_tree):
+                if isinstance(wnode, ast.ClassDef):
+                    for base in wnode.bases:
+                        bname = None
+                        if isinstance(base, ast.Name):
+                            bname = base.id
+                        elif isinstance(base, ast.Attribute):
+                            bname = base.attr
+                        if bname and "Widget" in bname:
+                            has_widget_classes = True
+                            break
+                if has_widget_classes:
+                    break
+        except Exception:
+            pass
+
+        if has_widget_classes:
+            # Check if ready() imports widgets
+            ready_imports_widgets = False
+            for node in config_class.body:
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "ready":
+                    for child in ast.walk(node):
+                        if isinstance(child, ast.ImportFrom):
+                            # `from .widgets import ...` or `from . import widgets`
+                            if child.module and "widgets" in child.module:
+                                ready_imports_widgets = True
+                            elif child.module is None:
+                                for alias in child.names:
+                                    if alias.name == "widgets":
+                                        ready_imports_widgets = True
+                        elif isinstance(child, ast.Import):
+                            for alias in child.names:
+                                if "widgets" in alias.name:
+                                    ready_imports_widgets = True
+            if ready_imports_widgets:
+                results.append(
+                    CheckResult("ready_widgets", Severity.PASS, "ready() imports widgets module")
+                )
+            else:
+                results.append(
+                    CheckResult(
+                        "ready_widgets",
+                        Severity.WARNING,
+                        "widgets.py has widget classes but ready() doesn't import widgets (widgets won't register)",
+                    )
+                )
+
     # Check __version__ or importlib.metadata at module level
     has_version_import = False
     for node in ast.walk(tree):
