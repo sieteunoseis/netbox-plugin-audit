@@ -219,9 +219,7 @@ def check_django_app(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
                 )
             )
             if widget_info["has_register_decorator"]:
-                results.append(
-                    CheckResult("widget_registration", Severity.PASS, "@register_widget decorator found")
-                )
+                results.append(CheckResult("widget_registration", Severity.PASS, "@register_widget decorator found"))
             else:
                 results.append(
                     CheckResult(
@@ -235,9 +233,7 @@ def check_django_app(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
                 CheckResult("widgets_py", Severity.INFO, "widgets.py exists but no DashboardWidget subclasses found")
             )
     else:
-        results.append(
-            CheckResult("widgets_py", Severity.INFO, "No dashboard widgets (widgets.py not found)")
-        )
+        results.append(CheckResult("widgets_py", Severity.INFO, "No dashboard widgets (widgets.py not found)"))
 
     # --- API structure ---
     api_dir = os.path.join(pkg_path, "api")

@@ -261,9 +261,7 @@ def check_pluginconfig(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
                                 if "widgets" in alias.name:
                                     ready_imports_widgets = True
             if ready_imports_widgets:
-                results.append(
-                    CheckResult("ready_widgets", Severity.PASS, "ready() imports widgets module")
-                )
+                results.append(CheckResult("ready_widgets", Severity.PASS, "ready() imports widgets module"))
             else:
                 results.append(
                     CheckResult(
