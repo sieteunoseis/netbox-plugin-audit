@@ -2,6 +2,7 @@
 
 import ast
 import os
+import re
 
 from . import CategoryResult, CheckResult, Severity
 
@@ -204,6 +205,49 @@ def check_django_app(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
     gql_path = os.path.join(pkg_path, "graphql.py")
     if os.path.isfile(gql_path):
         results.append(CheckResult("graphql_py", Severity.PASS, "graphql.py exists"))
+
+        # Check for deprecated FilterLookup[str] usage (NetBox 4.5.4+)
+        # In 4.5.4, the graphql library upgrade means FilterLookup[str] triggers
+        # deprecation warnings. Use StrFilterLookup[str] instead.
+        # Note: FilterLookup[int], FilterLookup[bool], etc. are NOT affected.
+        try:
+            with open(gql_path) as f:
+                gql_source = f.read()
+
+            # Find FilterLookup[str] occurrences (not StrFilterLookup[str])
+            deprecated_pattern = re.findall(r'(?<!\w)FilterLookup\[str\]', gql_source)
+            has_str_filter_import = "StrFilterLookup" in gql_source
+
+            if deprecated_pattern and not has_str_filter_import:
+                results.append(
+                    CheckResult(
+                        "graphql_filterlookup",
+                        Severity.WARNING,
+                        f"FilterLookup[str] found {len(deprecated_pattern)}x — deprecated in NetBox 4.5.4+. "
+                        "Replace with StrFilterLookup[str] (from strawberry_django import StrFilterLookup). "
+                        "For backwards compatibility: try/except import StrFilterLookup, "
+                        "falling back to FilterLookup as StrFilterLookup",
+                    )
+                )
+            elif deprecated_pattern and has_str_filter_import:
+                results.append(
+                    CheckResult(
+                        "graphql_filterlookup",
+                        Severity.WARNING,
+                        f"FilterLookup[str] still used {len(deprecated_pattern)}x despite StrFilterLookup import — "
+                        "replace remaining FilterLookup[str] with StrFilterLookup[str]",
+                    )
+                )
+            elif has_str_filter_import:
+                results.append(
+                    CheckResult(
+                        "graphql_filterlookup",
+                        Severity.PASS,
+                        "Uses StrFilterLookup[str] (compatible with NetBox 4.5.4+)",
+                    )
+                )
+        except Exception:
+            pass
 
     # --- Dashboard widgets ---
     widgets_path = os.path.join(pkg_path, "widgets.py")
