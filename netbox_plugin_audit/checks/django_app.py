@@ -215,7 +215,7 @@ def check_django_app(plugin_path: str, pkg_dir: str | None) -> CategoryResult:
                 gql_source = f.read()
 
             # Find FilterLookup[str] occurrences (not StrFilterLookup[str])
-            deprecated_pattern = re.findall(r'(?<!\w)FilterLookup\[str\]', gql_source)
+            deprecated_pattern = re.findall(r"(?<!\w)FilterLookup\[str\]", gql_source)
             has_str_filter_import = "StrFilterLookup" in gql_source
 
             if deprecated_pattern and not has_str_filter_import:
